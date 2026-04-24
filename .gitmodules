@@ -6,7 +6,7 @@
 	url = https://github.com/RudjiGames/rbase.git
 [submodule "src/libs/rmem"]
 	path = src/libs/rmem
-	url = https://github.com/RudjiGames/rmem.git
+	url = https://github.com/repelliuss/rmem.git
 [submodule "src/libs/rqt"]
 	path = src/libs/rqt
 	url = https://github.com/RudjiGames/rqt.git
@@ -21,7 +21,7 @@
 	url = https://github.com/RudjiGames/MTunerDLL.git
 [submodule "src/libs/rdebug"]
 	path = src/libs/rdebug
-	url = https://github.com/RudjiGames/rdebug.git
+	url = https://github.com/repelliuss/rdebug.git
 [submodule "3rd/DIA"]
 	path = 3rd/DIA
 	url = https://github.com/RudjiGames/DIA.git
