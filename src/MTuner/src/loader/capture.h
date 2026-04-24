@@ -150,9 +150,10 @@ class Capture
 		void					setCurrentModule(rdebug::ModuleInfo* _module) { m_currentModule = _module; }
 
 	private:
-		bool		loadModuleInfo(BinLoader& _loader, uint64_t inFileSize);
+		bool		loadModuleInfo(BinLoader& _loader, uint64_t inFileSize, uint8_t inVerLow);
 		bool		setLinksAndRemoveInvalid(uint64_t inMinMarkerTime);
-		void		addModule(const char* inName, uint64_t inModBase, uint64_t inModSize, uint64_t inTimeStamp);
+		void		addModule(const char* inName, uint64_t inModBase, uint64_t inModSize, uint64_t inTimeStamp,
+						  const uint8_t _pdbGuid[16] = nullptr, uint32_t _pdbAge = 0, const char* _pdbFileName = nullptr);
 		void		removeModule(const char* _path, uint64_t inModBase, uint64_t inModSize, uint64_t inTimeStamp);
 		void		calculateGlobalStats();
 		void		calculateSnapshotStats();

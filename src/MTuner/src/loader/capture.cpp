@@ -366,7 +366,7 @@ Capture::LoadResult Capture::loadBin(const char* _path)
 	if (verHigh > 1)
 		return Capture::LoadFail;
 
-	if (verLow > 2)
+	if (verLow > 3)
 		return Capture::LoadFail;
 
 #if RTM_LITTLE_ENDIAN
@@ -388,7 +388,7 @@ Capture::LoadResult Capture::loadBin(const char* _path)
 			m_swapEndian ? "Big" : "Little",
 			m_64bit ? "64" : "32" );
 
-	if (!loadModuleInfo(loader, fileSize))
+	if (!loadModuleInfo(loader, fileSize, verLow))
 	{
 		clearData();
 		return Capture::LoadFail;
@@ -1171,7 +1171,7 @@ void Capture::getGraphAtTime(uint64_t _time, GraphEntry& _entry)
 //--------------------------------------------------------------------------
 /// Loads symbol information
 //--------------------------------------------------------------------------
-bool Capture::loadModuleInfo(BinLoader& _loader, uint64_t _fileSize)
+bool Capture::loadModuleInfo(BinLoader& _loader, uint64_t _fileSize, uint8_t _verLow)
 {
 	uint32_t symbolInfoSize;
 	_loader.readVar(symbolInfoSize);
@@ -1228,7 +1228,39 @@ bool Capture::loadModuleInfo(BinLoader& _loader, uint64_t _fileSize)
 			modSize = Endian::swap(modSize);
 		}
 
-		addModule(pathBuffer, modBase, modSize, 0);
+		uint8_t pdbGuid[16] = {};
+		uint32_t pdbAge     = 0;
+		char pdbFileName[256] = {};
+		if (_verLow >= 3)
+		{
+			bytesRead += sizeof(pdbGuid) * _loader.read(pdbGuid, sizeof(pdbGuid));
+			bytesRead += sizeof(uint32_t) * _loader.readVar(pdbAge);
+			if (m_swapEndian)
+				pdbAge = Endian::swap(pdbAge);
+
+			// pdbFileName written with same charSize as exe path
+			if (charSize == 2)
+			{
+				char16_t pdbFileNameW[256];
+				bytesRead += ReadString<256>(pdbFileNameW, _loader, m_swapEndian, 0x23);
+				QByteArray fn = QString::fromUtf16((const char16_t*)pdbFileNameW).toUtf8();
+				size_t fnSz = (size_t)fn.size();
+				if (fnSz >= sizeof(pdbFileName)) fnSz = sizeof(pdbFileName) - 1;
+				memcpy(pdbFileName, fn.data(), fnSz);
+				pdbFileName[fnSz] = '\0';
+			}
+			else
+			{
+				char pdbFileNameA[256];
+				bytesRead += ReadString<256>(pdbFileNameA, _loader, m_swapEndian, 0x23);
+				size_t fnSz = strlen(pdbFileNameA);
+				if (fnSz >= sizeof(pdbFileName)) fnSz = sizeof(pdbFileName) - 1;
+				memcpy(pdbFileName, pdbFileNameA, fnSz);
+				pdbFileName[fnSz] = '\0';
+			}
+		}
+
+		addModule(pathBuffer, modBase, modSize, 0, pdbGuid, pdbAge, pdbFileName);
 
 		if (m_loadProgressCallback)
 		{
@@ -1514,7 +1546,8 @@ rdebug::Toolchain::Type convertToolchain(rmem::ToolChain::Enum _tc)
 //--------------------------------------------------------------------------
 /// Adds module to list of infos
 //--------------------------------------------------------------------------
-void Capture::addModule(const char* _path, uint64_t inModBase, uint64_t inModSize, uint64_t inTimeStamp)
+void Capture::addModule(const char* _path, uint64_t inModBase, uint64_t inModSize, uint64_t inTimeStamp,
+	const uint8_t inPdbGuid[16], uint32_t inPdbAge, const char* inPdbFileName)
 {
 	char exePath[1024];
 	rtm::strlCpy(exePath, RTM_NUM_ELEMENTS(exePath), _path);
@@ -1558,6 +1591,16 @@ void Capture::addModule(const char* _path, uint64_t inModBase, uint64_t inModSiz
 	info.m_unloadTime		= 0xffffffffffffffffUL;
 	info.m_toolchain.m_type	= convertToolchain(m_toolchain);
 	rtm::strlCpy(info.m_modulePath, RTM_NUM_ELEMENTS(info.m_modulePath), _path);
+
+	if (inPdbGuid)
+		memcpy(info.m_pdbGuid, inPdbGuid, 16);
+	else
+		memset(info.m_pdbGuid, 0, 16);
+	info.m_pdbAge = inPdbAge;
+	if (inPdbFileName)
+		rtm::strlCpy(info.m_pdbFileName, RTM_NUM_ELEMENTS(info.m_pdbFileName), inPdbFileName);
+	else
+		info.m_pdbFileName[0] = '\0';
 
 	m_moduleInfos.push_back(info);
 }
