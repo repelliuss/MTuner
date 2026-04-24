@@ -84,7 +84,7 @@ mkdir hde
 cd ..
 cd ..
 mkdir msvc
-mkdir lz4-r191
+mkdir lz4
 cd ..
 cd ..
 
@@ -104,8 +104,8 @@ copy ..\..\src\libs\rmem\3rd\minhook\src\hde\table32.h       SDK\3rd\minhook\src
 copy ..\..\src\libs\rmem\3rd\minhook\src\hde\table64.h       SDK\3rd\minhook\src\hde\table64.h
 copy ..\..\src\libs\rmem\3rd\minhook\include\MinHook.h       SDK\3rd\minhook\include\MinHook.h
 
-copy ..\..\src\libs\rmem\3rd\lz4-r191\lz4.h                  SDK\3rd\lz4-r191\lz4.h
-copy ..\..\src\libs\rmem\3rd\lz4-r191\lz4.c                  SDK\3rd\lz4-r191\lz4.c
+copy ..\..\src\libs\rmem\3rd\lz4\lz4.h                       SDK\3rd\lz4\lz4.h
+copy ..\..\src\libs\rmem\3rd\lz4\lz4.c                       SDK\3rd\lz4\lz4.c
    
 copy ..\..\src\libs\rmem\3rd\msvc\inttypes.h                 SDK\3rd\msvc\inttypes.h
 copy ..\..\src\libs\rmem\3rd\msvc\stdint.h                   SDK\3rd\msvc\stdint.h
